@@ -22,7 +22,7 @@ fn cat(filename: String) -> () {
                 if res.is_err() || content.is_empty() {
                     break;
                 }
-                out.write(content.as_bytes());
+                out.write(content.as_bytes()).unwrap();
             }
         }
         None => (),
@@ -39,12 +39,12 @@ fn compress(filename: String) -> () {
     let mut _reader = BufReader::new(_dfile);
     loop {
         let mut content = String::new();
-        _reader.read_line(&mut content);
+        _reader.read_line(&mut content).unwrap();
         if content.is_empty() {
-            _compressed.finish();
+            _compressed.finish().unwrap();
             break;
         }
-        _compressed.write(content.as_bytes());
+        _compressed.write(content.as_bytes()).unwrap();
     }
 }
 

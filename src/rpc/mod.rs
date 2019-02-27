@@ -8,10 +8,6 @@
 //!
 use jsonrpc_core::Result as JResult;
 use jsonrpc_derive::rpc;
-use std::collections::HashMap;
-use std::io::{Read, Write};
-
-const DEFAULT_BUFFER_SIZE: u32 = 0xffffffff;
 
 #[rpc]
 pub trait FileStore {

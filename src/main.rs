@@ -12,8 +12,6 @@ extern crate serde;
 
 #[macro_use]
 extern crate log;
-
-#[macro_use]
 extern crate jsonrpc_derive;
 
 #[macro_use]
@@ -39,6 +37,7 @@ use command::Opts;
 
 fn main() {
     env_logger::init();
+    info!("Initializing...");
     let args: Opts = Docopt::new(USAGE)
         .and_then(|d| d.deserialize())
         .unwrap_or_else(|e| e.exit());
