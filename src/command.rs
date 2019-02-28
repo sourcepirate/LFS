@@ -1,19 +1,20 @@
 //! All commands for LZMA filesystem
 //! compression tool.
 
-use lzma::{LzmaReader, LzmaWriter};
+use brotli::enc::BrotliEncoderParams;
+use brotli::{CompressorWriter, Decompressor};
 use std::fs::File;
 use std::io::{stdout, BufRead, BufReader, Write};
 
-const DEFAULT_COMPRESSION: u32 = 9;
+const DEFAULT_BUFFER: u32 = 4096;
 
 /// unarchive the lzma file
 fn cat(filename: String) -> () {
-    let is_archive = filename.find(".xz");
+    let is_archive = filename.find(".br");
     match is_archive {
         Some(_) => {
             let _dfile = File::open(&filename).unwrap();
-            let _decompressed = LzmaReader::new_decompressor(_dfile).unwrap();
+            let _decompressed = Decompressor::new(&_dfile, DEFAULT_BUFFER as usize);
             let mut _reader = BufReader::new(_decompressed);
             let mut out = stdout();
             loop {
@@ -31,17 +32,17 @@ fn cat(filename: String) -> () {
 
 /// compress the given text file
 fn compress(filename: String) -> () {
-    let new_filename = format!("{}.xz", filename.clone());
+    let new_filename = format!("{}.br", filename.clone());
 
     let _dfile = File::open(&filename).unwrap();
-    let _cfile = File::create(&new_filename).unwrap();
-    let mut _compressed = LzmaWriter::new_compressor(_cfile, DEFAULT_COMPRESSION).unwrap();
+    let mut _cfile = File::create(&new_filename).unwrap();
+    let params = BrotliEncoderParams::default();
+    let mut _compressed = CompressorWriter::with_params(_cfile, DEFAULT_BUFFER as usize, &params);
     let mut _reader = BufReader::new(_dfile);
     loop {
         let mut content = String::new();
         _reader.read_line(&mut content).unwrap();
         if content.is_empty() {
-            _compressed.finish().unwrap();
             break;
         }
         _compressed.write(content.as_bytes()).unwrap();

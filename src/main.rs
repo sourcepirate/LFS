@@ -3,11 +3,11 @@
 //! the module uses the LZMA/Brotli compression to store text
 //! data
 
+extern crate brotli;
 extern crate docopt;
 extern crate env_logger;
 extern crate jsonrpc_core;
 extern crate libc;
-extern crate lzma;
 extern crate serde;
 
 #[macro_use]
