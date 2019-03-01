@@ -1,6 +1,6 @@
 use brotli::enc::BrotliEncoderParams;
 use brotli::{CompressorWriter, Decompressor};
-use std::fs::{File, OpenOptions};
+use std::fs::File;
 use std::io::{self, BufReader, BufWriter, Read, Write};
 
 pub const DEFAULT_BUFF: usize = 4096;
@@ -90,4 +90,8 @@ where
     fn into_writer(&'a mut self) -> BrWriter<T> {
         BrWriter::new(self.block)
     }
+}
+
+pub fn open_br_file<'a>(file: &'a mut File) -> BrFile<File> {
+    BrFile::new(file)
 }
