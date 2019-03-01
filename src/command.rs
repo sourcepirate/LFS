@@ -14,7 +14,7 @@ fn cat(filename: String) -> () {
     match is_archive {
         Some(_) => {
             let _dfile = File::open(&filename).unwrap();
-            let _decompressed = Decompressor::new(&_dfile, DEFAULT_BUFFER as usize);
+            let _decompressed = Decompressor::new(_dfile, DEFAULT_BUFFER as usize);
             let mut _reader = BufReader::new(_decompressed);
             let mut out = stdout();
             loop {

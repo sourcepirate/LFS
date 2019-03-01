@@ -20,6 +20,7 @@ extern crate serde_derive;
 use docopt::Docopt;
 
 pub mod command;
+pub mod disk;
 pub mod rpc;
 
 const USAGE: &'static str = "
