@@ -5,4 +5,4 @@
 //!
 
 pub mod brfile;
-pub mod core;
+pub mod segment;
