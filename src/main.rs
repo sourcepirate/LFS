@@ -3,11 +3,13 @@
 //! the module uses the LZMA/Brotli compression to store text
 //! data
 
+extern crate adler32;
 extern crate brotli;
 extern crate docopt;
 extern crate env_logger;
 extern crate jsonrpc_core;
 extern crate libc;
+extern crate md5;
 extern crate serde;
 
 #[macro_use]
@@ -20,8 +22,7 @@ extern crate serde_derive;
 use docopt::Docopt;
 
 pub mod command;
-pub mod disk;
-pub mod rpc;
+pub mod rsync;
 
 const USAGE: &'static str = "
 LFS filesystem
