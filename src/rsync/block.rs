@@ -1,19 +1,25 @@
 use adler32::RollingAdler32;
 use md5::compute;
 
+pub type HashPair = (u32, Vec<u8>);
+
 pub trait BlockHash {
     fn week_hash(&self) -> u32;
     fn strong_hash(&self) -> Vec<u8>;
+
+    fn hash_pair(&self) -> HashPair {
+        (self.week_hash(), self.strong_hash())
+    }
 }
 
 pub struct Block {
     data: Vec<u8>,
-    offset: usize,
+    index: usize,
 }
 
 impl Block {
-    fn new(data: Vec<u8>, offset: usize) -> Block {
-        Block { data, offset }
+    pub fn new(data: Vec<u8>, index: usize) -> Block {
+        Block { data, index }
     }
 }
 
