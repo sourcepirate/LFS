@@ -1,75 +1,67 @@
 //! Uses checksum to calculate block checksums
 //! from fragments on files.
 
-use super::block::{Block, BlockHash};
-use std::collections::BTreeMap;
+use super::block::{Block, BlockHash, Signature};
 use std::io::Read;
 
-pub type DataBlock = [u8; 4096];
+pub type DataBlock = [u8; 512];
 
+#[derive(Debug)]
 pub struct CheckSumMap {
-    tree: BTreeMap<u32, Vec<Vec<u8>>>,
+    inner: Vec<Signature>,
+    lens: u32,
 }
 
 impl CheckSumMap {
     pub fn new() -> Self {
         CheckSumMap {
-            tree: BTreeMap::new(),
+            inner: Vec::new(),
+            lens: 0,
         }
     }
 
-    pub fn insert(&mut self, k: u32, val: Vec<u8>) {
-        match self.tree.get_mut(&k) {
-            Some(value) => value.push(val),
-            None => {
-                let mut vector = Vec::new();
-                vector.push(val);
-                self.tree.insert(k, vector);
+    pub fn contains(&self, sig: Signature) -> bool {
+        self.inner.contains(&sig)
+    }
+
+    pub fn get(&self, sig: Signature) -> Option<u32> {
+        for (i, item) in self.inner.iter().enumerate() {
+            if item.eq(&sig) {
+                return Some(i as u32);
             }
         }
+        None
     }
 
-    pub fn contains<T: BlockHash>(&self, block: T) -> bool {
-        let (week, strong) = block.hash_pair();
-        match self.tree.get(&week) {
-            Some(value) => value.contains(&strong),
-            None => false,
-        }
+    pub fn len(&self) -> u32 {
+        self.lens
     }
 
-    pub fn get<T: BlockHash>(&self, block: T) -> Option<&Vec<Vec<u8>>> {
-        self.tree.get(&block.week_hash())
-    }
-
-    pub fn checksums(&self) -> &BTreeMap<u32, Vec<Vec<u8>>> {
-        return &self.tree;
-    }
-}
-
-pub struct CheckSumReader<T: Read> {
-    inner: T,
-}
-
-impl<T: Read> CheckSumReader<T> {
-    pub fn new(inner: T) -> Self {
-        CheckSumReader { inner }
-    }
-
-    pub fn digest(&mut self) -> CheckSumMap {
-        let mut treemap: CheckSumMap = CheckSumMap::new();
-        let mut offset: usize = 0;
+    pub fn from<T: Read>(device: &mut T) -> Self {
+        let mut vector: Vec<Signature> = Vec::new();
+        let mut offset: u32 = 0;
         loop {
-            let mut bytes: DataBlock = [0u8; 4096];
-            let result = self.inner.read(&mut bytes);
-            match result {
+            let mut block: DataBlock = [0; 512];
+            let result = device.read(&mut block);
+
+            let flag = match result {
+                Ok(0) => false,
                 Ok(_) => {
-                    let block = Block::new(bytes.to_vec(), offset);
-                    treemap.insert(block.week_hash(), block.strong_hash());
+                    let data_block = Block::new(block.to_vec(), offset as usize);
+                    vector.push(data_block.hash_pair());
                     offset += 1;
+                    true
                 }
-                Err(_) => return treemap,
+                Err(_) => false,
+            };
+            if !flag {
+                break;
             }
         }
-        return treemap;
+
+        CheckSumMap {
+            inner: vector,
+            lens: offset,
+        }
     }
 }

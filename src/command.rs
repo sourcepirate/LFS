@@ -1,11 +1,11 @@
 //! All commands for LZMA filesystem
 //! compression tool.
 
+use super::rsync::delta::rdiff;
 use brotli::enc::BrotliEncoderParams;
 use brotli::{CompressorWriter, Decompressor};
 use std::fs::File;
 use std::io::{stdout, BufRead, BufReader, Write};
-
 const DEFAULT_BUFFER: u32 = 4096;
 
 /// unarchive the lzma file
@@ -49,11 +49,23 @@ fn compress(filename: String) -> () {
     }
 }
 
+/// Rdiff two files
+fn diff(file_one: &str, file_two: &str) -> () {
+    let mut file_one = File::open(file_one).unwrap();
+    let mut file_two = File::open(file_two).unwrap();
+
+    let delta = rdiff(&mut file_one, &mut file_two);
+    println!("{:?}", delta);
+}
+
 #[derive(Debug, Deserialize)]
 pub struct Opts {
     pub cmd_cat: bool,
     pub cmd_compress: bool,
+    pub cmd_diff: bool,
     pub arg_name: String,
+    pub arg_f1: String,
+    pub arg_f2: String,
 }
 
 impl Opts {
@@ -62,6 +74,8 @@ impl Opts {
             cat(self.arg_name.clone());
         } else if self.cmd_compress {
             compress(self.arg_name.clone());
+        } else if self.cmd_diff {
+            diff(&self.arg_f1, &self.arg_f2);
         }
     }
 }

@@ -30,6 +30,7 @@ LFS filesystem
 Usage:
   lfs cat <name>
   lfs compress <name>
+  lfs diff <f1> <f2>
 
 Options:
   -h --help     Show this screen.

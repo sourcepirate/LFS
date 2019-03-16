@@ -1,14 +1,16 @@
 use adler32::RollingAdler32;
 use md5::compute;
 
-pub type HashPair = (u32, Vec<u8>);
+#[derive(Debug)]
+pub struct Signature(pub u32, pub u32, pub Vec<u8>);
 
 pub trait BlockHash {
     fn week_hash(&self) -> u32;
     fn strong_hash(&self) -> Vec<u8>;
+    fn block_num(&self) -> u32;
 
-    fn hash_pair(&self) -> HashPair {
-        (self.week_hash(), self.strong_hash())
+    fn hash_pair(&self) -> Signature {
+        Signature(self.block_num(), self.week_hash(), self.strong_hash())
     }
 }
 
@@ -34,7 +36,19 @@ impl BlockHash for Block {
         let slice = &digest.0;
         return slice.to_vec();
     }
+
+    fn block_num(&self) -> u32 {
+        return self.index as u32;
+    }
 }
+
+impl PartialEq for Signature {
+    fn eq(&self, other: &Signature) -> bool {
+        self.1.eq(&other.1) && self.2.eq(&other.2)
+    }
+}
+
+impl Eq for Signature {}
 
 #[cfg(test)]
 mod tests {

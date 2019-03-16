@@ -2,3 +2,5 @@
 **/*.rs.bk
 .vagrant
 *.xz
+*.txt
+.DS_Store
