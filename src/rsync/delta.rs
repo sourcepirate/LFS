@@ -30,7 +30,7 @@ impl Delta {
                 Ok(_) => {
                     let blk = Block::new(block.to_vec(), offset as usize);
                     let sig = blk.hash_pair();
-                    println!("Trying to find {:?}", sig);
+                    info!("Trying to find {:?}", sig);
                     let value = self.0.get(sig);
                     match value {
                         Some(idx) => {
@@ -57,9 +57,9 @@ impl Delta {
 }
 
 pub fn rdiff(file_one: &mut File, file_two: &mut File) -> Vec<BlockVal> {
-    println!("File One: {:?}, File Two: {:?}", file_one, file_two);
+    info!("File One: {:?}, File Two: {:?}", file_one, file_two);
     let checksum = CheckSumMap::from(file_one);
-    println!("Signatures: {:?}", &checksum);
+    info!("Signatures: {:?}", &checksum);
     let delta = Delta::new(checksum);
     delta.diff(file_two)
 }

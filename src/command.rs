@@ -55,7 +55,7 @@ fn diff(file_one: &str, file_two: &str) -> () {
     let mut file_two = File::open(file_two).unwrap();
 
     let delta = rdiff(&mut file_one, &mut file_two);
-    println!("{:?}", delta);
+    info!("{:?}", delta);
 }
 
 #[derive(Debug, Deserialize)]
