@@ -1,7 +1,7 @@
 use super::block::{Block, BlockHash};
 use super::checksum::CheckSumMap;
 use super::checksum::DataBlock;
-use std::fs::File;
+use std::fmt::Debug;
 use std::io::{self, Read, Seek, SeekFrom, Write};
 
 const BLOCK_SIZE: u32 = 512;
@@ -56,7 +56,7 @@ impl Delta {
     }
 }
 
-pub fn rdiff(file_one: &mut File, file_two: &mut File) -> Vec<BlockVal> {
+pub fn rdiff<T: Read + Seek + Debug>(file_one: &mut T, file_two: &mut T) -> Vec<BlockVal> {
     info!("File One: {:?}, File Two: {:?}", file_one, file_two);
     let checksum = CheckSumMap::from(file_one);
     info!("Signatures: {:?}", &checksum);
