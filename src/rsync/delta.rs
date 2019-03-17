@@ -2,7 +2,7 @@ use super::block::{Block, BlockHash};
 use super::checksum::CheckSumMap;
 use super::checksum::DataBlock;
 use std::fs::File;
-use std::io::{Read, Seek, SeekFrom};
+use std::io::{self, Read, Seek, SeekFrom, Write};
 
 const BLOCK_SIZE: u32 = 512;
 
@@ -62,4 +62,34 @@ pub fn rdiff(file_one: &mut File, file_two: &mut File) -> Vec<BlockVal> {
     info!("Signatures: {:?}", &checksum);
     let delta = Delta::new(checksum);
     delta.diff(file_two)
+}
+
+pub fn reconstruct<T: Read + Seek + Write>(
+    delta: Vec<BlockVal>,
+    alpha: &mut T,
+    beta: &mut T,
+) -> io::Result<()> {
+    for del in delta.iter() {
+        match del {
+            &BlockVal::Number(_id) => {
+                let seek_pos: u64 = (_id * BLOCK_SIZE) as u64;
+                let mut block_read: DataBlock = [0u8; 512];
+                alpha.seek(SeekFrom::Start(seek_pos));
+                let result = alpha.read(&mut block_read);
+                match result {
+                    Ok(0) => {}
+                    Ok(_) => {
+                        beta.write(&block_read);
+                    }
+                    Err(_) => {}
+                };
+            }
+            &BlockVal::Chunk(value) => {
+                let chk: [u8; 1] = [value];
+                beta.write(&chk);
+            }
+        }
+    }
+
+    Ok(())
 }

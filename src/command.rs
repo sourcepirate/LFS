@@ -1,7 +1,7 @@
 //! All commands for LZMA filesystem
 //! compression tool.
 
-use super::rsync::delta::rdiff;
+use super::rsync::delta::{rdiff, BlockVal};
 use brotli::enc::BrotliEncoderParams;
 use brotli::{CompressorWriter, Decompressor};
 use std::fs::File;
@@ -55,7 +55,17 @@ fn diff(file_one: &str, file_two: &str) -> () {
     let mut file_two = File::open(file_two).unwrap();
 
     let delta = rdiff(&mut file_one, &mut file_two);
-    info!("{:?}", delta);
+
+    let mut blocks_changed = 0;
+
+    for d in delta.iter() {
+        match d {
+            BlockVal::Chunk(_) => blocks_changed += 1,
+            _ => {}
+        }
+    }
+
+    println!("{:?} chunks changed!!", blocks_changed);
 }
 
 #[derive(Debug, Deserialize)]
