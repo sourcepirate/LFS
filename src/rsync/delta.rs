@@ -4,7 +4,7 @@ use super::checksum::DataBlock;
 use std::fmt::Debug;
 use std::io::{self, Read, Seek, SeekFrom, Write};
 
-const BLOCK_SIZE: u32 = 512;
+const BLOCK_SIZE: u32 = 4096;
 
 #[derive(Debug)]
 pub enum BlockVal {
@@ -23,7 +23,7 @@ impl Delta {
         let mut vector: Vec<BlockVal> = Vec::new();
         let mut offset: u32 = 0;
         loop {
-            let mut block: DataBlock = [0; 512];
+            let mut block: DataBlock = [0; BLOCK_SIZE as usize];
             let value = asset.read(&mut block);
             let flag = match value {
                 Ok(0) => false,
@@ -69,17 +69,22 @@ pub fn reconstruct<T: Read + Seek + Write>(
     alpha: &mut T,
     beta: &mut T,
 ) -> io::Result<()> {
+    beta.seek(SeekFrom::Start(0));
     for del in delta.iter() {
         match del {
             &BlockVal::Number(_id) => {
                 let seek_pos: u64 = (_id * BLOCK_SIZE) as u64;
-                let mut block_read: DataBlock = [0u8; 512];
+                let mut block_read: DataBlock = [0u8; 4096];
                 alpha.seek(SeekFrom::Start(seek_pos));
                 let result = alpha.read(&mut block_read);
                 match result {
                     Ok(0) => {}
-                    Ok(_) => {
-                        beta.write(&block_read);
+                    Ok(n) => {
+                        if n < BLOCK_SIZE as usize {
+                            beta.write(&block_read[0..n]);
+                        } else {
+                            beta.write(&block_read);
+                        }
                     }
                     Err(_) => {}
                 };
@@ -87,6 +92,11 @@ pub fn reconstruct<T: Read + Seek + Write>(
             &BlockVal::Chunk(value) => {
                 let chk: [u8; 1] = [value];
                 beta.write(&chk);
+                beta.flush();
+                info!(
+                    "Writing chunk : {:?}",
+                    String::from_utf8(chk.to_vec()).unwrap()
+                );
             }
         }
     }

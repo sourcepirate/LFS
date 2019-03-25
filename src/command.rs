@@ -1,11 +1,11 @@
 //! All commands for LZMA filesystem
 //! compression tool.
 
-use super::rsync::delta::{rdiff, BlockVal};
+use super::rsync::delta::{rdiff, reconstruct, BlockVal};
 use brotli::enc::BrotliEncoderParams;
 use brotli::{CompressorWriter, Decompressor};
-use std::fs::File;
-use std::io::{stdout, BufRead, BufReader, Write};
+use std::fs::{File, OpenOptions};
+use std::io::{stdout, BufRead, BufReader, Read, Seek, Write};
 const DEFAULT_BUFFER: u32 = 4096;
 
 /// unarchive the lzma file
@@ -68,11 +68,30 @@ fn diff(file_one: &str, file_two: &str) -> () {
     println!("{:?} chunks changed!!", blocks_changed);
 }
 
+/// Reconstructs file based on diff
+fn reconstructf(file_one: &str, file_two: &str) -> () {
+    let mut file_one = File::open(file_one).unwrap();
+    let mut file_two = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .open(file_two)
+        .unwrap();
+    let delta = rdiff(&mut file_two, &mut file_one);
+    println!("Reconstructing {:?}", file_two);
+    let res = reconstruct::<File>(delta, &mut file_one, &mut file_two);
+
+    match res {
+        Ok(_) => println!("Reconstuction complete!"),
+        Err(_e) => println!("{:?}", _e),
+    };
+}
+
 #[derive(Debug, Deserialize)]
 pub struct Opts {
     pub cmd_cat: bool,
     pub cmd_compress: bool,
     pub cmd_diff: bool,
+    pub cmd_reconstruct: bool,
     pub arg_name: String,
     pub arg_f1: String,
     pub arg_f2: String,
@@ -86,6 +105,8 @@ impl Opts {
             compress(self.arg_name.clone());
         } else if self.cmd_diff {
             diff(&self.arg_f1, &self.arg_f2);
+        } else if self.cmd_reconstruct {
+            reconstructf(&self.arg_f1, &self.arg_f2);
         }
     }
 }

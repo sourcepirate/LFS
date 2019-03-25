@@ -31,6 +31,7 @@ Usage:
   lfs cat <name>
   lfs compress <name>
   lfs diff <f1> <f2>
+  lfs reconstruct <f1> <f2>
 
 Options:
   -h --help     Show this screen.

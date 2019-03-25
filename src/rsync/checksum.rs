@@ -4,7 +4,7 @@
 use super::block::{Block, BlockHash, Signature};
 use std::io::Read;
 
-pub type DataBlock = [u8; 512];
+pub type DataBlock = [u8; 4096];
 
 #[derive(Debug)]
 pub struct CheckSumMap {
@@ -41,7 +41,7 @@ impl CheckSumMap {
         let mut vector: Vec<Signature> = Vec::new();
         let mut offset: u32 = 0;
         loop {
-            let mut block: DataBlock = [0; 512];
+            let mut block: DataBlock = [0; 4096];
             let result = device.read(&mut block);
 
             let flag = match result {
